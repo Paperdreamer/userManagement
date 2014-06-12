@@ -97,17 +97,6 @@
 			return $this->checkLoginState();
 		}
 		
-		public function getIsLoggedInAsAdministrator () {
-			if (!$this->getLoginState())
-				return false;
-				
-			$parameters = Array();
-			$parameters[":userID"] = $_SESSION["userdata"]["ID"];
-				
-			$result = $this->DB->getRow("SELECT EXISTS(SELECT * FROM Admins WHERE UserID = :userID)", $parameters);
-			return array_values($result)[0];
-		}
-		
 		public function getAllActiveUsers() {
 			return $this->DB->getList("SELECT ID, Name, Fullname, Email, GravatarEmail, (Admins.Deleteable IS NOT NULL) AS Admin FROM " . USER_TABLE . " LEFT JOIN " . ADMIN_TABLE . " ON Users.ID = Admins.UserID WHERE Suspended=0");
 		}
