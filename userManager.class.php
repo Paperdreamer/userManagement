@@ -140,7 +140,6 @@
 		}
 
 		private function updateToken ($userID) {
-			// TODO: set token expire time
 			$parameters = Array();
 			$parameters[":userID"] = $userID;
 			$parameters[":token"] = $this->generateToken();
