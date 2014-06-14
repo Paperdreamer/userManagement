@@ -91,6 +91,21 @@
 			$parameters[":username"] = $username;
 
 			$this->DB->query("UPDATE " . USER_TABLE . " SET Suspended = 0 WHERE Name = :username", $parameters);
+			
+			// Returning the affected user's ID	
+			return $this->getUserID();
+		}
+
+		public function getUserID ($username) {
+			$parameters = Array();
+			$parameters[":Username"] = $username;
+
+			$result = $this->DB->getRow("SELECT ID FROM " . USER_TABLE . " WHERE Username = :Username", $parameters);
+			
+			if (isset($result["ID"])
+				return $return["ID"];
+			else
+				return false;
 		}
 
 		public function getLoginState () {
