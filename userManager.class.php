@@ -1,5 +1,4 @@
 <?php
-	//test
 	session_start();
 	
 	require_once "../userManagement/config.php";	// TODO: This might be a problem later, we have to solve. I think we should specify, that the user has to migrate some settings into his config file in his root folder.
@@ -86,9 +85,24 @@
 
 			$this->DB->query("UPDATE " . USER_TABLE . " SET Name = :username WHERE ID = :userID");
 		}
+		
+		public function activateUser ($username) {
+			$parameters = Array();
+			$parameters[":username"] = $username;
+
+			$this->DB->query("UPDATE " . USER_TABLE . " SET Suspended = 0 WHERE Name = :username", $parameters);
+		}
 
 		public function getLoginState () {
 			return $this->checkLoginState();
+		}
+		
+		public function getAllActiveUsers() {
+			return $this->DB->getList("SELECT ID, Name, Fullname, Email, GravatarEmail, (Admins.Deleteable IS NOT NULL) AS Admin FROM " . USER_TABLE . " LEFT JOIN " . ADMIN_TABLE . " ON Users.ID = Admins.UserID WHERE Suspended=0");
+		}
+		
+		public function getAllSuspendedUsers() {
+			return $this->DB->getList("SELECT ID, Name, Fullname, Email, GravatarEmail, (Admins.Deleteable IS NOT NULL) AS Admin  FROM " . USER_TABLE . " LEFT JOIN " . ADMIN_TABLE . " ON Users.ID = Admins.UserID WHERE Suspended=1");
 		}
 
 		public function getSession () {
@@ -174,6 +188,42 @@
 			}
 
 			return false;
+		}
+		
+		//Checks if the given user is an admin
+		private static function isAdmin($userID){
+			$parameters=Array();
+			$parameters=[":userID"]=$userID;
+			//TODO: Following two lines probably have a shortcut
+			$result=$this->DB->getRow("SELECT * FROM Admins WHERE UserID = :userID", $parameters);
+			return is_array($result);
+		}
+		
+		//Checks if a the current user has a higher level than another user
+		private function isSuperior($userID){
+			if(!$this->getLoginState())
+				return false;		
+			$current=Array();
+			$current[":userID"]=getSession()["ID"];
+			if(isAdmin(getSession()["ID"])){
+				if(!array_values($this->DB->getRow("SELECT Deletable FROM Admins WHERE UserID = :userID", $current))[0])
+					return true;
+				else
+					return !isAdmin($userID);
+			}else
+				return false;
+		}
+		
+		//Promotes a user if the current user has a higher level and returns true if successful
+		public function promoteUser($userID, $deletable){
+			$parameters=Array();
+			$parameters[":userID"]=$userID;
+			$parameters[":deletable"]=$deletable;
+			if(this->isSuperrior($userID)){
+				$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deletable) VALUES (:userID, :deletable)", $parameters);
+				return true;
+			}else
+				return false;
 		}
 	}
 ?>
