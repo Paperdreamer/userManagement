@@ -206,41 +206,5 @@
 
 			return false;
 		}
-		
-		//Checks if the given user is an admin
-		private static function isAdmin($userID){
-			$parameters=Array();
-			$parameters=[":userID"]=$userID;
-			//TODO: Following two lines probably have a shortcut
-			$result=$this->DB->getRow("SELECT * FROM Admins WHERE UserID = :userID", $parameters);
-			return is_array($result);
-		}
-		
-		//Checks if a the current user has a higher level than another user
-		private function isSuperior($userID){
-			if(!$this->getLoginState())
-				return false;		
-			$current=Array();
-			$current[":userID"]=getSession()["ID"];
-			if(isAdmin(getSession()["ID"])){
-				if(!array_values($this->DB->getRow("SELECT Deletable FROM Admins WHERE UserID = :userID", $current))[0])
-					return true;
-				else
-					return !isAdmin($userID);
-			}else
-				return false;
-		}
-		
-		//Promotes a user if the current user has a higher level and returns true if successful
-		public function promoteUser($userID, $deletable){
-			$parameters=Array();
-			$parameters[":userID"]=$userID;
-			$parameters[":deletable"]=$deletable;
-			if(this->isSuperrior($userID)){
-				$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deletable) VALUES (:userID, :deletable)", $parameters);
-				return true;
-			}else
-				return false;
-		}
 	}
 ?>
