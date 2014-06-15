@@ -102,7 +102,7 @@
 
 			$result = $this->DB->getRow("SELECT ID FROM " . USER_TABLE . " WHERE Username = :Username", $parameters);
 			
-			if (isset($result["ID"])
+			if (isset($result["ID"]))
 				return $return["ID"];
 			else
 				return false;
