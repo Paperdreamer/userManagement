@@ -207,7 +207,7 @@
 		//Checks if the given user is an admin
 		private static function isAdmin($userID){
 			$parameters=Array();
-			$parameters=[":userID"]=$userID;
+			$parameters[":userID"]=$userID;
 			//TODO: Following two lines probably have a shortcut
 			$result=$this->DB->getRow("SELECT * FROM Admins WHERE UserID = :userID", $parameters);
 			return is_array($result);
@@ -233,7 +233,7 @@
 			$parameters=Array();
 			$parameters[":userID"]=$userID;
 			$parameters[":deletable"]=$deletable;
-			if(this->isSuperrior($userID)){
+			if(isSuperrior($userID)){
 				$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deletable) VALUES (:userID, :deletable)", $parameters);
 				return true;
 			}else
