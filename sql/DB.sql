@@ -28,7 +28,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE IF NOT EXISTS `Admins` (
   `UserID` int(11) NOT NULL,
-  `Deleteable` tinyint(1) NOT NULL,
+  `Deletable` tinyint(1) NOT NULL,
   PRIMARY KEY (`UserID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
