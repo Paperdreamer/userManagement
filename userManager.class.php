@@ -91,6 +91,24 @@
 			$parameters[":username"] = $username;
 
 			$this->DB->query("UPDATE " . USER_TABLE . " SET Suspended = 0 WHERE Name = :username", $parameters);
+<<<<<<< HEAD
+=======
+			
+			// Returning the affected user's ID	
+			return $this->getUserID();
+		}
+
+		public function getUserID ($username) {
+			$parameters = Array();
+			$parameters[":Username"] = $username;
+
+			$result = $this->DB->getRow("SELECT ID FROM " . USER_TABLE . " WHERE Username = :Username", $parameters);
+			
+			if (isset($result["ID"])
+				return $return["ID"];
+			else
+				return false;
+>>>>>>> upstream/master
 		}
 
 		public function getLoginState () {
@@ -125,7 +143,6 @@
 		}
 
 		private function updateToken ($userID) {
-			// TODO: set token expire time
 			$parameters = Array();
 			$parameters[":userID"] = $userID;
 			$parameters[":token"] = $this->generateToken();
