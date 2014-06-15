@@ -1,4 +1,5 @@
 <?php
+	//test
 	session_start();
 	
 	require_once "../userManagement/config.php";	// TODO: This might be a problem later, we have to solve. I think we should specify, that the user has to migrate some settings into his config file in his root folder.
