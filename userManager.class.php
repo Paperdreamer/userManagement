@@ -238,10 +238,10 @@
 			if(isSuperrior($userID)){
 				if(array_values($this->DB->getRow("SELECT Deletable FORM Admins WHERE UserID = :userID", $current))[0]==0){
 					$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deletable) VALUES (:userID, :deletable)", $parameters);
-					return true;
 				}else{
 					$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deletable) VALUES (:userID, 1)", $parameters);
 				}
+				return true;
 			}else
 				return false;
 		}
