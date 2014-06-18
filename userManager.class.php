@@ -220,7 +220,7 @@
 			$current=Array();
 			$current[":userID"]=getSession()["ID"];
 			if(isAdmin(getSession()["ID"])){
-				if(!array_values($this->DB->getRow("SELECT Deletable FROM Admins WHERE UserID = :userID", $current))[0])
+				if(!array_values($this->DB->getRow("SELECT Deleteable FROM Admins WHERE UserID = :userID", $current))[0])
 					return true;
 				else
 					return !isAdmin($userID);
@@ -229,12 +229,12 @@
 		}
 
 		//Promotes a user if the current user has a higher level and returns true if successful
-		public function promoteUser($userID, $deletable){
+		public function promoteUser($userID, $deleteable){
 			$parameters=Array();
 			$parameters[":userID"]=$userID;
-			$parameters[":deletable"]=$deletable;
+			$parameters[":deleteable"]=$deleteable;
 			if(isSuperrior($userID)){
-				$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deletable) VALUES (:userID, :deletable)", $parameters);
+				$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deleteable) VALUES (:userID, :deleteable)", $parameters);
 				return true;
 			}else
 				return false;
