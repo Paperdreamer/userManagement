@@ -212,7 +212,7 @@
 			$result=$this->DB->getRow("SELECT * FROM Admins WHERE UserID = :userID", $parameters);
 			return is_array($result);
 		}
-		
+
 		//Checks if a the current user has a higher level than another user
 		private function isSuperior($userID){
 			if(!$this->getLoginState())
@@ -227,7 +227,7 @@
 			}else
 				return false;
 		}
-		
+
 		//Promotes a user if the current user has a higher level and returns true if successful
 		public function promoteUser($userID, $deletable){
 			$parameters=Array();
