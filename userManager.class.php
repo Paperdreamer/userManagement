@@ -228,16 +228,43 @@
 				return false;
 		}
 
-		//Promotes a user if the current user has a higher level and returns true if successful
-		public function promoteUser($userID, $deleteable){
+		//Promotes or demotes a user according to the given level(0=user, 1=admin, 2=god)
+		public function changeUserLevel($userID, $level){
+			$current=Array();
+			$current[":userID"]=getSession()["ID"];
 			$parameters=Array();
 			$parameters[":userID"]=$userID;
-			$parameters[":deleteable"]=$deleteable;
-			if(isSuperrior($userID)){
-				$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deleteable) VALUES (:userID, :deleteable)", $parameters);
-				return true;
-			}else
+			$isThisDeleteable=array_values($this->DB->getRow("SELECT Deleteable FROM Admins WHERE UserID = :userID"),$current)[0];
+			if($this->isSuperrior($userID)){
+			//TODO: add confirmation messages
+				switch($level){
+					case 0:
+						if(isAdmin($userID)){
+							$this->DB->query("DELETE FROM " . ADMIN_TABLE . "WHERE UserID = :userID", $parameters);
+						}
+						return true;
+					case 1:
+						if(!isAdmin($userID)){
+							$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deleteable) VALUES (:userID, 1)", $parameters);
+						}
+						return true;
+					case 2:
+						if(!$isThisDeleteable){
+							if(isAdmin($userID)){
+								$this->DB->query("UPDATE " . ADMIN_TABLE . "SET Deleteable = 0 WHERE UserID = :userID", $parameters);
+							}else{
+								$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deleteable) VALUES (:userID, 0)", $parameters);
+							}
+							return true;
+						}else{
+							//TODO: error message here
+							return false;
+						}
+				}
+			}else{
+				//TODO: error message here
 				return false;
+			}
 		}
 	}
 ?>
