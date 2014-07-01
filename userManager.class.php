@@ -93,17 +93,17 @@
 			$this->DB->query("UPDATE " . USER_TABLE . " SET Suspended = 0 WHERE Name = :username", $parameters);
 			
 			// Returning the affected user's ID	
-			return $this->getUserID();
+			return $this->getUserID($username);
 		}
 
 		public function getUserID ($username) {
 			$parameters = Array();
 			$parameters[":Username"] = $username;
 
-			$result = $this->DB->getRow("SELECT ID FROM " . USER_TABLE . " WHERE Username = :Username", $parameters);
+			$result = $this->DB->getRow("SELECT ID FROM " . USER_TABLE . " WHERE Name = :Username", $parameters);
 			
 			if (isset($result["ID"]))
-				return $return["ID"];
+				return $result["ID"];
 			else
 				return false;
 		}
@@ -178,11 +178,11 @@
 			return (($now->getTimestamp() - $date->getTimestamp()) < 0); // negative value if $date is in the future
 		}
 
-		private function getUserData ($userID) {
+		public function getUserData ($userID) {
 			$parameters = Array();
-			$parameters[":userID"];
+			$parameters[":userID"] = $userID;
 
-			return $this->dbWrapper("SELECT * FROM " . USER_TABLE . " WHERE ID = :userID");
+			return $this->DB->getRow("SELECT * FROM " . USER_TABLE . " WHERE ID = :userID", $parameters);
 		}
 
 		private function checkLoginState () {
@@ -206,43 +206,41 @@
 		
 		//Checks if the given user is an admin
 		private function isAdmin($userID){
-			$parameters=Array();
-			$parameters[":userID"]=$userID;
-			//TODO: Following two lines probably have a shortcut
-			$result=$this->DB->getRow("SELECT * FROM Admins WHERE UserID = :userID", $parameters);
+			$parameters = Array();
+			$parameters[":userID"] = $userID;
+			$result = $this->DB->getRow("SELECT * FROM Admins WHERE UserID = :userID", $parameters);
 			return is_array($result);
 		}
 
-		//Checks if a the current user has a higher level than another user
-		private function isSuperior($userID){
-			if(!$this->getLoginState())
+		//Checks if a the left user has a higher level than right user
+		private function isSuperior($userID1, $userID2){
+			if(!$this->getLoginState()){
 				return false;		
-			$current=Array();
-			$current[":userID"]=$this->getSession()["ID"];
-			if($this->isAdmin($this->getSession()["ID"])){
-				if(!array_values($this->DB->getRow("SELECT Deleteable FROM Admins WHERE UserID = :userID", $current))[0])
+			}
+			if($this->isAdmin($userID1)){
+				if(!$this->isDeleteable($userID1)){
 					return true;
-				else
-					return !$this->isAdmin($userID);
-			}else
+				}else{
+					return !$this->isAdmin($userID2);
+				}
+			}else{
 				return false;
+			}
 		}
 		
 		private function isDeleteable($userID){
-			$parameters=Array();
-			$parameters[":userID"]=$userID;
+			$parameters = Array();
+			$parameters[":userID"] = $userID;
 			return array_values($this->DB->getRow("SELECT Deleteable FROM Admins WHERE UserID = :userID",$parameters))[0];
 		}
 
 		//Promotes or demotes a user according to the given level(0=user, 1=admin, 2=god)
-		public function changeLevel($userID, $level){
-			$current=Array();
-			$current[":userID"]=$this->getSession()["ID"];
-			print_r($current);
-			$parameters=Array();
-			$parameters[":userID"]=$userID;
-			if($this->isSuperior($userID)){
-			//TODO: add confirmation messages
+		public function changeRole($userID, $level){
+			$current = Array();
+			$current[":userID"] = $this->getSession()["ID"];
+			$parameters = Array();
+			$parameters[":userID"] = $userID;
+			if($this->isSuperior($current[":userID"], $userID)){
 				switch($level){
 					case 0:
 						if($this->isAdmin($userID)&&$this->isDeleteable($userID)){
@@ -267,12 +265,10 @@
 							}
 							return true;
 						}else{
-							//TODO: error message here
 							return false;
 						}
 				}
 			}else{
-				//TODO: error message here
 				return false;
 			}
 		}
