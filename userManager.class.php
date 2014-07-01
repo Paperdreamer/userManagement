@@ -203,5 +203,74 @@
 
 			return false;
 		}
+		
+		//Checks if the given user is an admin
+		private function isAdmin($userID){
+			$parameters = Array();
+			$parameters[":userID"] = $userID;
+			$result = $this->DB->getRow("SELECT * FROM Admins WHERE UserID = :userID", $parameters);
+			return is_array($result);
+		}
+
+		//Checks if a the left user has a higher level than right user
+		private function isSuperior($userID1, $userID2){
+			if(!$this->getLoginState()){
+				return false;		
+			}
+			if($this->isAdmin($userID1)){
+				if(!$this->isDeleteable($userID1)){
+					return true;
+				}else{
+					return !$this->isAdmin($userID2);
+				}
+			}else{
+				return false;
+			}
+		}
+		
+		private function isDeleteable($userID){
+			$parameters = Array();
+			$parameters[":userID"] = $userID;
+			return array_values($this->DB->getRow("SELECT Deleteable FROM Admins WHERE UserID = :userID",$parameters))[0];
+		}
+
+		//Promotes or demotes a user according to the given level(0=user, 1=admin, 2=god)
+		public function changeRole($userID, $level){
+			$current = Array();
+			$current[":userID"] = $this->getSession()["ID"];
+			$parameters = Array();
+			$parameters[":userID"] = $userID;
+			if($this->isSuperior($current[":userID"], $userID)){
+				switch($level){
+					case 0:
+						if($this->isAdmin($userID)&&$this->isDeleteable($userID)){
+							$this->DB->query("DELETE FROM " . ADMIN_TABLE . " WHERE UserID = :userID", $parameters);
+							return true;
+						}else{
+							return false;
+						}
+					case 1:
+						if(!$this->isAdmin($userID)){
+							$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deleteable) VALUES (:userID, 1)", $parameters);
+							return true;
+						}else{
+							return false;
+						}
+					case 2:
+						if(!$this->isDeleteable($current[":userID"])){
+							if($this->isAdmin($userID)){
+								$this->DB->query("UPDATE " . ADMIN_TABLE . " SET Deleteable = 0 WHERE UserID = :userID", $parameters);
+							}else{
+								$this->DB->query("INSERT INTO " . ADMIN_TABLE . "(UserID, Deleteable) VALUES (:userID, 0)", $parameters);
+							}
+							return true;
+						}else{
+							return false;
+						}
+				}
+			}else{
+				return false;
+			}
+		}
 	}
 ?>
