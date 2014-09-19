@@ -27,7 +27,7 @@
 			return $this->DB->query("DELETE FROM " . PROJECT_TABLE . " WHERE ID = :id", $parameters);
 		}
 		
-		public function createProject($name, $description, $director) {
+		public function createProject($name, $description) {
 			$parameters = Array();
 			$parameters[":name"] = $name;
 			
@@ -38,10 +38,16 @@
 			if (!$this->DB->query("INSERT INTO " . PROJECT_TABLE . " (Name, Description, Approved) VALUES (:name, :description, 0)", $parameters))
 				return false;
 			
-			$result = $this->DB->getLastInsertId();
-			$this->addUser2Project($director, $result, "Director");
+			return $this->DB->getLastInsertId();
+		}
+		
+		public function updateProject($id, $name, $description) {
+			$parameters = Array();
+			$parameters[":projectID"] = $id;
+			$parameters[":name"] = $name;
+			$parameters[":description"] = $description;
 			
-			return $result;
+			$this->DB->query("UPDATE " . PROJECT_TABLE . " SET Name = :name, Description = :description WHERE ID = :projectID", $parameters);
 		}
 
 		public function openProject($projectID) {
@@ -57,22 +63,24 @@
 		}
 
 		public function getProjectUsers ($projectID) {
-			// TODO: return users, associated to a specific project
-			// I think only the user IDs shall be returned  ( or shall we join?! )
 			$parameters = Array();
 			$parameters[":projectID"] = $projectID;
 
-			return $this->DB->getList("SELECT UserID, Role FROM " . USERSINPROJECTS_TABLE . " WHERE ProjectID = :projectID", $parameters);
+			return $this->DB->getList("SELECT UserID, Role, Name, Fullname FROM " . USERSINPROJECTS_TABLE . " JOIN " . USER_TABLE . " ON " . USERSINPROJECTS_TABLE . ".UserID = " . USER_TABLE . ".ID " . 
+			                          "WHERE ProjectID = :projectID", $parameters);
 		}
 
 		public function addUser2Project ($userID, $projectID, $role) {
 			$parameters = Array();
 			$parameters[":userID"] = $userID;
 			$parameters[":projectID"] = $projectID;
-			$parameters[":role"] = $role;
 
-			// TODO: CHECK IF USER IS ALREADY IN THIS TEAM
-			$this->DB->query("INSERT INTO " . USERSINPROJECTS_TABLE . " (UserID, ProjectID, Role) VALUES (:userID, :projectID, :role)", $parameters);
+			if (is_array($this->DB->getRow("SELECT * FROM " . USERSINPROJECTS_TABLE . " WHERE UserID = :userID AND ProjectID = :projectID", $parameters))) {
+				changeUserRole($userID, $projectID, $role);
+			} else {
+				$parameters[":role"] = $role;
+				$this->DB->query("INSERT INTO " . USERSINPROJECTS_TABLE . " (UserID, ProjectID, Role) VALUES (:userID, :projectID, :role)", $parameters);
+			}
 		}
 
 		public function changeUserRole ($userID, $projectID, $role) {
@@ -90,6 +98,13 @@
 			$parameters[":projectID"] = $projectID;
 
 			$this->DB->query("DELETE FROM " . USERSINPROJECTS_TABLE . " WHERE UserID = :userID AND ProjectID = :projectID");
+		}
+		
+		public function removeAllUsersFromProject ($projectID) {
+			$parameters = Array();
+			$parameters[":projectID"] = $projectID;
+
+			$this->DB->query("DELETE FROM " . USERSINPROJECTS_TABLE . " WHERE ProjectID = :projectID", $parameters);
 		}
 
 		// Gets the projects the user is associated with and the roles he/she has // TODO: come up with a better name for this method
