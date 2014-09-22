@@ -29,7 +29,7 @@
 			$parameters[":password"] = $this->hash($password);
 			
 			// Get the user data
-			$userdata = $this->DB->getRow("SELECT ID, Name, Fullname, Suspended, ".
+			$userdata = $this->DB->getRow("SELECT " . USER_TABLE . ".*, ".
 			                                      "EXISTS(SELECT " . USER_TABLE . ".ID FROM " . ADMIN_TABLE . " WHERE " . USER_TABLE . ".ID = " . ADMIN_TABLE . ".UserID) AS isAdmin, " . 
 			                                      "EXISTS(SELECT " . USER_TABLE . ".ID FROM " . ADMIN_TABLE . " WHERE " . USER_TABLE . ".ID = " . ADMIN_TABLE . ".UserID AND " . ADMIN_TABLE . ".Deleteable = 1) AS isDeleteable " .
 			                                      "FROM " . USER_TABLE ." WHERE Name = :username AND PasswordHash = :password", $parameters);
@@ -90,6 +90,13 @@
 			$this->DB->query("UPDATE " . USER_TABLE . " SET Name = :username WHERE ID = :userID");
 		}
 		
+		public function confirmPassword($pass) {
+			$data = Array();
+			$data[":id"] = $this->getSession()["ID"];
+			$pass2 = $this->DB->query("SELECT PasswordHash FROM " . USER_TABLE . " WHERE ID = :id", $data);
+			return $pass == $pass2;
+		}
+		
 		public function activateUser ($username) {
 			$parameters = Array();
 			$parameters[":username"] = $username;
@@ -117,11 +124,11 @@
 		}
 		
 		public function getAllActiveUsers() {
-			return $this->DB->getList("SELECT ID, Name, Fullname, Email, GravatarEmail, Deleteable, (Admins.Deleteable IS NOT NULL) AS Admin FROM " . USER_TABLE . " LEFT JOIN " . ADMIN_TABLE . " ON Users.ID = Admins.UserID WHERE Suspended=0");
+			return $this->DB->getList("SELECT ID, Name, Fullname, Email, GravatarEmail, Deleteable, (" . ADMIN_TABLE . ".Deleteable IS NOT NULL) AS Admin FROM " . USER_TABLE . " LEFT JOIN " . ADMIN_TABLE . " ON " . USER_TABLE . ".ID = " . ADMIN_TABLE . ".UserID WHERE Suspended=0");
 		}
 		
 		public function getAllSuspendedUsers() {
-			return $this->DB->getList("SELECT ID, Name, Fullname, Email, GravatarEmail, (Admins.Deleteable IS NOT NULL) AS Admin  FROM " . USER_TABLE . " LEFT JOIN " . ADMIN_TABLE . " ON Users.ID = Admins.UserID WHERE Suspended=1");
+			return $this->DB->getList("SELECT ID, Name, Fullname, Email, GravatarEmail, (" . ADMIN_TABLE . ".Deleteable IS NOT NULL) AS Admin  FROM " . USER_TABLE . " LEFT JOIN " . ADMIN_TABLE . " ON " . USER_TABLE . ".ID = " . ADMIN_TABLE . ".UserID WHERE Suspended=1");
 		}
 
 		public function getSession () {
@@ -186,9 +193,12 @@
 			$parameters = Array();
 			$parameters[":userID"] = $userID;
 
-			return $this->DB->getRow("SELECT * FROM " . USER_TABLE . " WHERE ID = :userID", $parameters);
+			return $this->DB->getRow("SELECT *, ".
+											"EXISTS(SELECT " . USER_TABLE . ".ID FROM " . ADMIN_TABLE . " WHERE " . USER_TABLE . ".ID = " . ADMIN_TABLE . ".UserID) AS isAdmin, " .
+											"EXISTS(SELECT " . USER_TABLE . ".ID FROM " . ADMIN_TABLE . " WHERE " . USER_TABLE . ".ID = " . ADMIN_TABLE . ".UserID AND " . ADMIN_TABLE . ".Deleteable = 1) AS isDeleteable " .
+											"FROM " . USER_TABLE . " WHERE ID = :userID", $parameters);
 		}
-
+		
 		private function checkLoginState () {
 			// TODO
 			// compare session token and db token
@@ -249,6 +259,29 @@
 			} else {
 				return false;
 			}
+		}
+		
+		public function updateUser($userID, $action, $newValue) {
+			$parameters = Array();
+			$parameters[":userID"] = $userID;
+			//$parameters[":action"] = $action;
+			$parameters[":newValue"] = $newValue;
+			switch($action) {
+				case "Email":
+					//TODO: Getting a magical syntax error when I write :action instead of Email. Fixing that would make this method a lot easier and prettier
+					$result = $this->DB->query("UPDATE " . USER_TABLE . " SET Email = :newValue WHERE ID = :userID", $parameters);
+					break;
+				case "GravatarEmail":
+					$result = $this->DB->query("UPDATE " . USER_TABLE . " SET GravatarEmail = :newValue WHERE ID = :userID", $parameters);
+					break;
+				case "Password":
+					$result = $this->DB->query("UPDATE " . USER_TABLE . " SET PasswordHash = :newValue WHERE ID = :userID", $parameters);
+			}
+			if($result) {
+				return true;
+			} else {
+				return false;
+			}			
 		}
 	}
 ?>

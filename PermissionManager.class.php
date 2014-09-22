@@ -24,7 +24,7 @@ abstract class PermissionManager
 		$DB = Flight::DB();
 		$parameters = Array();
 		$parameters[":userID"] = $userID;
-		$result = $DB->getRow("SELECT * FROM Admins WHERE UserID = :userID", $parameters);
+		$result = $DB->getRow("SELECT * FROM " . ADMIN_TABLE . " WHERE UserID = :userID", $parameters);
 		return is_array($result);
 	}
 
@@ -46,7 +46,7 @@ abstract class PermissionManager
 		$DB = Flight::DB();
 		$parameters = Array();
 		$parameters[":userID"] = $userID;
-		return array_values($DB->getRow("SELECT Deleteable FROM Admins WHERE UserID = :userID",$parameters))[0];
+		return array_values($DB->getRow("SELECT Deleteable FROM " . ADMIN_TABLE . " WHERE UserID = :userID",$parameters))[0];
 	}
 
 }

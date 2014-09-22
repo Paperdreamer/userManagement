@@ -13,7 +13,7 @@
 			$parameters[":ProjectID"] = $ProjectID;
 			$parameters[":CanvasID"] = $CanvasID;
 
-			return $this->DB->getRow("SELECT * FROM Canvas WHERE ProjectID = :ProjectID AND ID = :CanvasID", $parameters);
+			return $this->DB->getRow("SELECT * FROM " . CANVAS_TABLE . " WHERE ProjectID = :ProjectID AND ID = :CanvasID", $parameters);
 		}
 
 		function addCanvas ($ProjectID, $PositionIndex, $Title, $Description, $Notes) {
@@ -24,7 +24,7 @@
 			$parameters["Description"] = $Description;
 			$parameters["Notes"] = $Notes;
 
-			$this->DB->query("INSERT INTO Canvas(ProjectID, PositionIndex, Title, Description, Notes) VALUES(:ProjectID, :PositionIndex, :Title, :Description, :Notes)", $parameters);
+			$this->DB->query("INSERT INTO " . CANVAS_TABLE . "(ProjectID, PositionIndex, Title, Description, Notes) VALUES(:ProjectID, :PositionIndex, :Title, :Description, :Notes)", $parameters);
 		}
 
 		function removeCanvas ($ProjectID, $CanvasID) {
@@ -32,14 +32,14 @@
 			$parameters[":ProjectID"] = $ProjectID;
 			$parameters[":CanvasID"] = $CanvasID;
 
-			return $this->DB->query("DELETE FROM Canvas WHERE ProjectID = :ProjectID AND ID = :CanvasID", $parameters);
+			return $this->DB->query("DELETE FROM " . CANVAS_TABLE . " WHERE ProjectID = :ProjectID AND ID = :CanvasID", $parameters);
 		}
 
 		function removeAll ($ProjectID) {
 			$parameters = array();
 			$parameters[":CanvasID"] = $CanvasID;
 
-			return $this->DB->query("DELETE FROM Canvas WHERE ProjectID = :ProjectID", $parameters);
+			return $this->DB->query("DELETE FROM " . CANVAS_TABLE . " WHERE ProjectID = :ProjectID", $parameters);
 		}
 
 		function updatePanel ($ProjectID, $panelData) {
@@ -51,7 +51,7 @@
 			$parameters[":Notes"] 			= $panelData["Notes"];
 			$parameters[":PositionIndex"] 	= $panelData["PositionIndex"];
 
-			return $this->DB->query("UPDATE Canvas SET Title = :Title, Description = :Description, Notes = :Notes, PositionIndex = :PositionIndex WHERE ID = :ID AND ProjectID = :ProjectID", $parameters);
+			return $this->DB->query("UPDATE " . CANVAS_TABLE . " SET Title = :Title, Description = :Description, Notes = :Notes, PositionIndex = :PositionIndex WHERE ID = :ID AND ProjectID = :ProjectID", $parameters);
 		}
 
 		function updateAssets ($AssetID, $assets) {
@@ -67,7 +67,7 @@
 				$parameters[":flipY"] = $asset["flipY"];
 				$parameters[":angle"] = $asset["angle"];	
 
-				$this->DB->query("UPDATE Asset2Canvas SET `Index` = :Index, top = :top, `left` = :left, scaleX = :scaleX, scaleY = :scaleY, flipX = :flipX, flipY = :flipY, angle = :angle WHERE ID = :ID", $parameters);
+				$this->DB->query("UPDATE " . ASSETTOCANVAS_TABLE . " SET `Index` = :Index, top = :top, `left` = :left, scaleX = :scaleX, scaleY = :scaleY, flipX = :flipX, flipY = :flipY, angle = :angle WHERE ID = :ID", $parameters);
 			}
 			
 		}
@@ -76,14 +76,14 @@
 			$parameters = array();
 			$parameters[":ProjectID"] = $ProjectID;
 
-			return $this->DB->getList("SELECT * FROM Canvas WHERE ProjectID = :ProjectID ORDER BY PositionIndex ASC", $parameters);
+			return $this->DB->getList("SELECT * FROM " . CANVAS_TABLE . " WHERE ProjectID = :ProjectID ORDER BY PositionIndex ASC", $parameters);
 		}
 
 		function getAssets ($CanvasID) {
 			$parameters = array();
 			$parameters[":CanvasID"] = $CanvasID;
 
-			return $this->DB->getList("SELECT *, Asset2Canvas.ID FROM Asset2Canvas JOIN Asset ON Asset2Canvas.AssetID = Asset.ID WHERE Asset2Canvas.CanvasID = :CanvasID ORDER BY Asset2Canvas.Index DESC", $parameters);
+			return $this->DB->getList("SELECT *, " . ASSETTOCANVAS_TABLE . ".ID FROM " . ASSETTOCANVAS_TABLE . " JOIN " . ASSET_TABLE . " ON " . ASSETTOCANVAS_TABLE . ".AssetID = " . ASSET_TABLE . ".ID WHERE " . ASSETTOCANVAS_TABLE . ".CanvasID = :CanvasID ORDER BY " . ASSETTOCANVAS_TABLE . ".Index DESC", $parameters);
 		}
 	}
 ?>
