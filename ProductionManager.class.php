@@ -19,21 +19,21 @@
 		public function updateProject ($projectID, $data) {
 			$canvasManager = new CanvasManager($this->DB);
 			// TODO check for permission
-			$this->updateProjectMetaData($projectID, $data);
+			$this->updateProjectMetaData($projectID, $data["Name"], $data["Description"]);
 			foreach ($data["Panels"] as $panel) {
 				$canvasManager->updatePanel($projectID, $panel);
 				// TODO: Prevent manipulating assets that are assigned to another project...
 				$canvasManager->updateAssets($panel["ID"], $panel["Assets"]);
 			}
 		}
-
-		public function updateProjectMetaData ($projectID, $data) {
+		
+		public function updateProjectMetaData($id, $name, $description) {
 			$parameters = Array();
-			$parameters[":ID"] = $projectID;
-			$parameters[":Name"] = $data["Name"];
-			$parameters[":Description"] = $data["Description"];
-
-			return $this->DB->query("UPDATE " . PROJECT_TABLE . " SET Name = :Name, Description = :Description WHERE ID = :ID", $parameters);
+			$parameters[":projectID"] = $id;
+			$parameters[":name"] = $name;
+			$parameters[":description"] = $description;
+			
+			$this->DB->query("UPDATE " . PROJECT_TABLE . " SET Name = :name, Description = :description WHERE ID = :projectID", $parameters);
 		}
 		
 		public function deleteProject ($projectID) {
@@ -56,15 +56,6 @@
 				return false;
 			
 			return $this->DB->getLastInsertId();
-		}
-		
-		public function updateProject($id, $name, $description) {
-			$parameters = Array();
-			$parameters[":projectID"] = $id;
-			$parameters[":name"] = $name;
-			$parameters[":description"] = $description;
-			
-			$this->DB->query("UPDATE " . PROJECT_TABLE . " SET Name = :name, Description = :description WHERE ID = :projectID", $parameters);
 		}
 
 		public function openProject($projectID) {
