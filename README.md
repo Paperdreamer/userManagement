@@ -1,3 +1,9 @@
+#CAUTION!
+#THIS REPOSITROY IS DEPRECATED
+#FROM NOW ON THE MANAGERS ARE FOUND IN backend/manager
+
+
+
 #UserManagement
 ##System requirements
 - PHP >= 5.4
